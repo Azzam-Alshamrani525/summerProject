@@ -1,0 +1,20 @@
+Write a Python command-line password strength checker with this exact behavior:
+
+1. Loop continuously, asking the user to enter a password, until they type "end" 
+   (case-insensitive, and ignoring leading/trailing spaces).
+2. If the user enters nothing (empty input), print "No password entered" and 
+   continue the loop without running any checks.
+3. For each password, check these 5 rules:
+   - At least 8 characters long
+   - Contains at least one uppercase letter
+   - Contains at least one lowercase letter
+   - Contains at least one number
+   - Contains at least one special character (e.g., !@#$%^&*)
+4. Based on how many rules pass, rate the password as:
+   - Weak (0-2 rules passed)
+   - Medium (3-4 rules passed)
+   - Strong (all 5 rules passed)
+5. Output format:
+   - First line: the strength rating
+   - Second line (only if not Strong): a comma-separated list of what's missing, 
+     e.g., "Too short, no numbers, no uppercase letters"
