@@ -1,0 +1,34 @@
+Day 3 — Code Review: Password Strength Checker
+
+5 Improvements Identified:
+
+1. Special character list is incomplete/arbitrary
+   The check only recognizes symbols in a fixed string 
+   ("!@#$%^&*()_+-=[]{}|;:,.<>?"). Any symbol outside this list 
+   (e.g., ~, `, or currency symbols) won't be counted as "special," 
+   even though it clearly is one.
+
+2. All rules are weighted equally
+   Length, uppercase, lowercase, number, and symbol each count as 
+   1 point toward the score. This treats a missing symbol as equally 
+   serious as a password being dangerously short, which may not be 
+   an accurate reflection of real security risk.
+   (e.g Ab and password! is both weak, and both considerd the same strength)
+
+3. Verified, not a bug: "end" with internal spaces
+   Initially suspected that typing "en d" or "e nd" should be treated 
+   as the exit command, but re-checked the spec — only leading 
+   spaces should be ignored, not spaces inside the word. The code is 
+   correct here; this was a good example of verifying before assuming 
+   something is broken.
+
+4. Function mixes logic and printing
+   check_password() both calculates the strength AND prints the result 
+   in the same function. This makes it harder to reuse the strength 
+   calculation elsewhere (e.g., logging results, automated testing) 
+   without it also printing every time.
+
+5. Unexplained "magic numbers" for thresholds
+   The lines "if score <= 2" and "elif score <= 4" use fixed numbers 
+   with no comment explaining why those specific values were chosen. 
+   Anyone reading the code later has to guess the reasoning.
