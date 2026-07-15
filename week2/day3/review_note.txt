@@ -15,12 +15,11 @@ Day 3 — Code Review: Password Strength Checker
    an accurate reflection of real security risk.
    (e.g Ab and password! is both weak, and both considerd the same strength)
 
-3. Verified, not a bug: "end" with internal spaces
-   Initially suspected that typing "en d" or "e nd" should be treated 
-   as the exit command, but re-checked the spec — only leading 
-   spaces should be ignored, not spaces inside the word. The code is 
-   correct here; this was a good example of verifying before assuming 
-   something is broken.
+3. Could offer a simple GUI instead of CLI only
+   The password checker only runs in the terminal, which limits it to 
+   people comfortable with command lines. A simple Streamlit GUI would 
+   let a user type a password into a text box and see the strength 
+   rating instantly, without needing to use a terminal at all.
 
 4. Function mixes logic and printing
    check_password() both calculates the strength AND prints the result 

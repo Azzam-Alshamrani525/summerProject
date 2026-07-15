@@ -1,3 +1,5 @@
+import streamlit as st
+
 def evaluate_password(password):
     """Returns (strength, reasons) without printing anything."""
     length_ok = len(password) >= 8
@@ -35,20 +37,13 @@ def evaluate_password(password):
     return strength, reasons
 
 
-print("Password Strength Checker — type 'end' to quit")
+st.title("Password Strength Checker")
+password = st.text_input("Enter a password", type="password")
 
-while True:
-    password = input("\nEnter a password: ").strip()
-
-    if password.lower() == "end":
-        print("Goodbye!")
-        break
-
-    if password == "":
-        print("No password entered")
-        continue
-
+if password:
     strength, reasons = evaluate_password(password)
-    print(strength)
+    st.subheader(strength)
     if reasons:
-        print(", ".join(reasons).capitalize())
+        st.write(", ".join(reasons).capitalize())
+else:
+    st.write("No password entered")
