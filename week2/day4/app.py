@@ -2,8 +2,8 @@ import streamlit as st
 
 def evaluate_password(password):
     """Returns (strength, reasons) without printing anything."""
-    length_ok = len(password) >= 8  # bug 3: should be >=
-    has_upper = any(c.isupper() for c in password)  # bug 1: should check isupper()
+    length_ok = len(password) >= 8  # bug 3: should be >= not <=
+    has_upper = any(c.isupper() for c in password)  # bug 1: should check isupper() not is lower()
     has_lower = any(c.islower() for c in password)
     has_number = any(c.isdigit() for c in password)
     has_special = any(not c.isalnum() for c in password)
