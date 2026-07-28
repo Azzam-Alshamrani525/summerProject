@@ -78,7 +78,7 @@ Additional input for existing books:
 - Must run via: `python booktracker.py`
 - Windows / Git Bash environment
 
-## 9. Definition of Done
+## 9. Definition of Doneg
 
 - All 6 core functional requirements (Section 4) work correctly
 - Invalid input is rejected gracefully, never crashes the program
