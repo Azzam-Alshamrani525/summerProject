@@ -1,0 +1,10 @@
+1. From: unknown sender "R. Kim" — "Hey, need this back to me ASAP, it's urgent!" (no context on who R. Kim is or what "this" refers to)
+2. From: Product-Updates@tool.com — "New feature released: dark mode is here!" (automated product newsletter)
+3. Thread — 3 messages between user and teammate Alex: msg1 "can we sync on the roadmap?", msg2 (user replied already), msg3 (most recent, from Alex) "great, does Thursday 2pm work?"
+4. From: HR — "Open enrollment for benefits closes in 3 weeks, please review your selections." (deadline exists but weeks out, not hours)
+5. From: CEO (company-wide) — "Congrats to the team on a strong quarter!" (no action, but high-status sender)
+6. From: Vendor — "Your invoice #4471 payment confirmation" (informational, closed-loop)
+7. From: Teammate (Priya) — "Quick q — did we ever decide on the vendor for the offsite?" (direct question, no deadline)
+8. From: unknown automated address — "You have 1 new notification" (no real content given)
+9. From: Manager's assistant — "Following up — do you have your travel dates for the conference yet?" (a request, unclear how time-sensitive)
+10. From: Newsletter (industry digest) — "This week in AI: 10 links you should read"
