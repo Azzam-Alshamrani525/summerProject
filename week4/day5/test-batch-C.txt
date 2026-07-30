@@ -1,0 +1,6 @@
+1. From: Omar (Manager) — "Need the client proposal draft by end of day — call with them is at 4pm."
+2. From: Teammate (Lina) — "Can you review my slides before Thursday's standup? No rush before then."
+3. From: Finance — "Your expense report for June has been approved and reimbursed."
+4. From: Vendor Newsletter — "5 productivity tools you need to try this year."
+5. From: Client (Nexa Corp) — "Following up — did you get a chance to look at our contract redlines?"
+6. From: Facilities — "Office will be closed this Friday for maintenance." (informational, 4 days out)
