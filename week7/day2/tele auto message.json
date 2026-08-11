@@ -1,0 +1,1866 @@
+{
+  "name": "tele auto message",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1808,
+        528
+      ],
+      "id": "9df0193c-5d15-415b-8957-17671e462c87",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.rssUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        -1216,
+        528
+      ],
+      "id": "107fc1f4-3229-4ecb-9689-70e7d3c67703",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        528
+      ],
+      "id": "c66455f1-3e2c-476f-8d14-8e0ab3264a59",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a509cc-a1dc-4bac-8bc3-95db454e8df7",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "36ae7c29-ca3a-48e6-a264-674013462a5a",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -832,
+        528
+      ],
+      "id": "b1afe0da-7d0c-4959-9d32-88042b564d49",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on this YouTube video title, write a short intro sentence, then exactly 3 bullet points guessing what the video covers. Title: {{ $json.title }}\"\n    }\n  ],\n  \"max_tokens\": 1500\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -640,
+        528
+      ],
+      "id": "14902441-a15f-4a50-8a54-220f1d674d6e",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uUJshABxRNnLlG6g",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Reformat this into a short Telegram message. Keep the 3 bullet points as-is, add 1 relevant emoji, no markdown headers: {{ JSON.stringify($json.choices[0].message.content).slice(1, -1) }}\"\n    }\n  ],\n  \"max_tokens\": 800\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -384,
+        512
+      ],
+      "id": "4d597252-5e1b-41eb-84e0-6b03fb735c31",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uUJshABxRNnLlG6g",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "={{ $('Code in JavaScript').item.json.channelName }} uploaded a new video: \"{{ $('Edit Fields').item.json.title }}\"\n\n🔗 {{ $('Edit Fields').item.json.link.replace(/_/g, '\\\\_') }}\n\nWant to receive it?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "✅ Yes, send it",
+            "disapproveLabel": "❌ No, skip"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        432
+      ],
+      "id": "7c265da6-18b9-4e7f-9031-22cfeebead1f",
+      "name": "Send message and wait for response",
+      "webhookId": "ca72f8c9-e2d5-449e-bf66-e6325415015d",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1872,
+        -80
+      ],
+      "id": "4c391aa4-c6ad-48cf-9169-f8a71ee017e7",
+      "name": "Telegram Trigger",
+      "webhookId": "a1b928be-3be7-47bb-9308-4ae2ccecb5e1",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "not a youtube link, please send any link from youtube",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -704,
+        320
+      ],
+      "id": "792bb674-84c0-44aa-a3b0-c0ecb90c199a",
+      "name": "no youtube link",
+      "webhookId": "fdb2cb69-93b4-4305-a26b-b8a4d5d1b446",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "87f30057-76c9-4018-a170-813da02a6d35",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "youtube.com",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "5daf346d-d7aa-4080-b5bc-af23cd646807",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "youtu.be",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1344,
+        144
+      ],
+      "id": "3623a1ea-8a73-47d5-8911-264f7404bd88",
+      "name": "if youtube link"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "eece72cc-e440-43c0-ba71-ac58bb5f3b11",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "watch?v=",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "dbb09f00-436e-466e-b677-01cec586930a",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "youtu.be/",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1072,
+        48
+      ],
+      "id": "aef71ef9-b30e-4e90-98e5-5547433b08dd",
+      "name": "if youtube vid"
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=⚠️ Workflow failed: {{ $workflow.name }}\nNode: HTTP Request (Groq #1)\nError: HTTP {{ $json.error.status }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -464,
+        672
+      ],
+      "id": "5a0d0413-64e1-41e7-b9a8-652270b37242",
+      "name": "error grok 1",
+      "webhookId": "ec2cdeb2-7179-4347-ac53-ac79537d64d7",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=⚠️ Workflow failed: {{ $workflow.name }}\nNode: HTTP Request1 (Groq #2)\nError: HTTP {{ $json.error.status }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        688
+      ],
+      "id": "bb69d7ea-7fb6-44c7-adc1-d0ab2befba6b",
+      "name": "error grok 2",
+      "webhookId": "4861587d-d800-4116-aaf0-8795bd95b441",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=Skipped — you disapproved this one.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        560
+      ],
+      "id": "3797d0de-9b8c-44a1-8825-97b4f5a9c521",
+      "name": "disapprove",
+      "webhookId": "4861587d-d800-4116-aaf0-8795bd95b441",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "={{ $('Edit Fields').item.json.title }}\n\n{{ $('HTTP Request1').item.json.choices[0].message.content }}\n\n🔗 {{ $('Edit Fields').item.json.link }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        288,
+        416
+      ],
+      "id": "13db7479-b938-46c3-a6b4-8fb8a492fe2d",
+      "name": "approve message",
+      "webhookId": "1319e6a4-1327-4bba-a6ad-9c49cb2e7765",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.youtube.com/oembed?url={{ encodeURIComponent($json.message.text) }}&format=json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -784,
+        -16
+      ],
+      "id": "6b47adf4-dc7e-402f-9319-ccb932466925",
+      "name": "oEmbed for youtube vid"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.author_url || $json.message.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -592,
+        96
+      ],
+      "id": "758b2c42-4086-44d4-9b8b-e36a7e2dc248",
+      "name": "fetch channel page"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.data;\n\n// Try pattern 1: the JSON blob embedded in most channel/video pages\nlet match = html.match(/\"channelId\":\"(UC[a-zA-Z0-9_-]{22})\"/);\n\n// Try pattern 2: the canonical link tag (more reliable across page types)\nif (!match) {\n  match = html.match(/youtube\\.com\\/channel\\/(UC[a-zA-Z0-9_-]{22})/);\n}\n\nif (!match) {\n  throw new Error(\"Could not find a channel ID in the page HTML\");\n}\n\nconst channelId = match[1];\n\nconst titleMatch = html.match(/<title>(.*?)<\\/title>/);\nconst channelName = titleMatch\n  ? titleMatch[1].replace(/ - YouTube$/, '')\n  : 'Unknown channel';\n\nreturn [{\n  json: {\n    channelId,\n    channelName,\n    rssUrl: `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        96
+      ],
+      "id": "e34bef79-6157-41aa-8852-16aec65daec7",
+      "name": "extract channle ID"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "=📺 Start monitoring this channel?\n\n{{ $json.channelName }}\n{{ $json.rssUrl.replace(/_/g, '\\\\_') }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "✅ Yes, start monitoring",
+            "disapproveLabel": "❌ No, Don't"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        96
+      ],
+      "id": "958ab4ce-4431-4b74-9649-a0afa12ccd62",
+      "name": "start monitoring this channle?",
+      "webhookId": "b66ba39b-62b1-41fb-80a7-adad39106e05",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "223c9793-51aa-4370-8b70-d34a1e31f970",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        432
+      ],
+      "id": "56b847b0-e56a-44ab-b7c8-aa4d1a509525",
+      "name": "approve or disaprove of vid summery"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6178d0b4-3f9b-468b-9c97-b7fc70c22768",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        32,
+        96
+      ],
+      "id": "a960235f-b9a0-42c9-9a7c-d00e558d7693",
+      "name": "approve or disaprove of monitring the channle"
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "Okay, not monitoring that channel. ",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        208
+      ],
+      "id": "c62e14af-d73d-4fe7-90e0-9a44ca17964f",
+      "name": "not monitoring message",
+      "webhookId": "345f92ed-d22e-44b5-9401-8c1089968074",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=✅ Now monitoring {{ $json.channelName }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        32
+      ],
+      "id": "eaa73ce7-1e0e-4fe5-8016-391493f5c7bd",
+      "name": "confirm monitring message",
+      "webhookId": "84d5c2c5-e565-4f0d-92fe-dfea0661a2cd",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8b7a8dad-e290-4865-ad51-f32fc43eca41",
+              "name": "channelId",
+              "value": "={{ $('extract channle ID').item.json.channelId }}",
+              "type": "string"
+            },
+            {
+              "id": "3c18fe42-40f1-4121-9ab9-0a1808775e93",
+              "name": "channelName",
+              "value": "={{ $('extract channle ID').item.json.channelName }}",
+              "type": "string"
+            },
+            {
+              "id": "6759fb5c-17ea-4644-9bf5-9c949eb111b9",
+              "name": "rssUrl",
+              "value": "={{ $('extract channle ID').item.json.rssUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        32
+      ],
+      "id": "aa4ef1d6-d201-4495-964d-ecb3f9828ca8",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "12XhySd4wRH9qxjok23k13jrTnFkDICkt",
+          "mode": "list",
+          "cachedResultName": "channel_config.json",
+          "cachedResultUrl": "https://drive.google.com/file/d/12XhySd4wRH9qxjok23k13jrTnFkDICkt/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1600,
+        528
+      ],
+      "id": "8bef9855-b998-41da-a293-6e6c96699fa3",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6M3zsG6Fh839mDjx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst text = buffer.toString('utf-8');\nconst parsed = JSON.parse(text);\n\n// Convert to File wraps single items in an array — unwrap it\nconst data = Array.isArray(parsed) ? parsed[0] : parsed;\n\nreturn [{ json: data }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        528
+      ],
+      "id": "a9ad4023-871e-4999-9332-334832711425",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "12XhySd4wRH9qxjok23k13jrTnFkDICkt",
+          "mode": "list",
+          "cachedResultName": "channel_config.json",
+          "cachedResultUrl": "https://drive.google.com/file/d/12XhySd4wRH9qxjok23k13jrTnFkDICkt/view?usp=drivesdk"
+        },
+        "changeFileContent": true,
+        "newUpdatedFileName": "channel_config.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        32
+      ],
+      "id": "cc28bc12-1016-4566-b91c-015f70fb059d",
+      "name": "Update file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6M3zsG6Fh839mDjx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        432,
+        32
+      ],
+      "id": "99bb3944-06e2-4196-86ea-db9189fec489",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9d67add8-0702-4697-8a2a-e2d2313a401b",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1584,
+        -80
+      ],
+      "id": "c812cf56-9a8f-4850-8ae7-3862612a3e76",
+      "name": "is this /start"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0aff80ef-d17c-44f5-9e5a-1730d87fd312",
+              "name": "channelId",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "4b77f332-42f7-4eab-9180-8cad5ba20ee6",
+              "name": "channelName",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "86944d3d-193c-4a4d-b057-3dfad33043c7",
+              "name": "rssUrl",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -784,
+        -176
+      ],
+      "id": "c46e5997-4d74-47e2-b38b-f6c723cedf34",
+      "name": "clear channel config"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        -176
+      ],
+      "id": "69d9f083-d302-4ff9-a3f8-5c627131b1d1",
+      "name": "Convert to File (stop)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "12XhySd4wRH9qxjok23k13jrTnFkDICkt",
+          "mode": "list",
+          "cachedResultName": "channel_config.json",
+          "cachedResultUrl": "https://drive.google.com/file/d/12XhySd4wRH9qxjok23k13jrTnFkDICkt/view?usp=drivesdk"
+        },
+        "changeFileContent": true,
+        "newUpdatedFileName": "channel_config.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -304,
+        -176
+      ],
+      "id": "ee35db4f-5588-4cc0-a6af-dc93d6f9cde3",
+      "name": "Update file (stop)",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "6M3zsG6Fh839mDjx",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "🛑 Monitoring stopped.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        -176
+      ],
+      "id": "df2767d1-badb-4ab3-802b-bf18d5bca4a9",
+      "name": "stop confirmation message",
+      "webhookId": "fc05e3b8-6085-4a1a-900d-6db7e7d0fec6",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "👋 Welcome! I can summarize a video/article for you, or monitor a YouTube channel and send you new uploads automatically.\n\nTap below to get started.",
+        "approvalOptions": {
+          "values": {
+            "approveLabel": "🚀 Begin"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1920,
+        -400
+      ],
+      "id": "56306f06-7a85-43b7-b8e7-9cd7c862c4b6",
+      "name": "start welcome message",
+      "webhookId": "f644098e-5907-4b90-a842-e7dd063f571a",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "What would you like to do?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "📝 Summarize something",
+            "disapproveLabel": "📺 Monitor a channel"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1760,
+        -400
+      ],
+      "id": "be115267-20ae-4c86-9cff-503a0a563dc4",
+      "name": "ask summarize or monitor",
+      "webhookId": "a019243b-f6e3-46b4-8f5c-55b3d1e38e80",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f1e1cb25-1a99-4c14-9bc0-134f36bae5f5",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1584,
+        -608
+      ],
+      "id": "57b48bc7-e2d3-4bb4-9b67-43118ff8f223",
+      "name": "path selection"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "🔗 Send me a link (article or video) to summarize.",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -992,
+        -720
+      ],
+      "id": "fde1f373-aeb0-4c5a-ab3c-b218a9fa4ced",
+      "name": "ask for link (path A)",
+      "webhookId": "f0596a7c-6339-4ffa-aeee-e34eae89eba3",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d4955ec-5f3e-4843-a762-ec5cea061882",
+              "name": "title",
+              "value": "={{ $json.data.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -736,
+        -720
+      ],
+      "id": "0cb7cf57-4128-4302-958f-32f135025a11",
+      "name": "prep summarize input"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Summarize this link in a short intro sentence, then exactly 3 bullet points. Link: {{ $json.title }}\"\n    }\n  ],\n  \"max_tokens\": 1500\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -528,
+        -720
+      ],
+      "id": "a4d54655-ce58-49c0-af6e-bef4b723c975",
+      "name": "Groq call (Path A)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uUJshABxRNnLlG6g",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "={{ $json.choices[0].message.content }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -96,
+        -912
+      ],
+      "id": "cc7811b3-6d91-48a1-bff3-2bfa81d693e2",
+      "name": "send summary (path A)",
+      "webhookId": "6b0e8a72-5235-4baa-bc87-fe8be243895a",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=⚠️ Workflow failed: {{ $workflow.name }}\nNode: Groq call (Path A)\nError: HTTP {{ $json.error.status }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -96,
+        -656
+      ],
+      "id": "4ad17ef7-29d9-4bb2-9501-b607ae2935bf",
+      "name": "error grok path a",
+      "webhookId": "80797bea-3408-48eb-a61a-414d00eb7cfe",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "📺 Send me the channel or video link (YouTube only).",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1040,
+        -512
+      ],
+      "id": "9867bb98-5f83-4dbe-a3b3-236d1b5a6b01",
+      "name": "ask for channel link (path B)",
+      "webhookId": "d7062eff-932c-42c0-b0b1-45b77f86144a",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "07122c4b-d02a-4403-bb9d-2f18e415936a",
+              "leftValue": "={{ $json.data.text }}",
+              "rightValue": "youtube.com",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "a151cf29-36aa-47a9-bedf-2a178a0dc7b0",
+              "leftValue": "={{ $json.data.text }}",
+              "rightValue": "youtu.be",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -784,
+        -512
+      ],
+      "id": "cca7dfba-a7df-49c3-8b82-77f2131eb9a1",
+      "name": "validate youtube link (path B)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// normalize the free-text reply into the same shape the existing\n// Chain A nodes expect (message.text), so they can be reused unmodified\nconst text = $input.first().json.data.text;\nreturn [{ json: { message: { text } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        -560
+      ],
+      "id": "d1fdb5b2-3c51-46d8-8b73-a6fe1fbf9f00",
+      "name": "wrap as message"
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "❌ That doesn't look like a YouTube link. Please send a valid YouTube video or channel link (youtube.com or youtu.be).",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        -384
+      ],
+      "id": "8e7ae6ec-aa64-464a-ab7c-fbcb44819419",
+      "name": "invalid link message (path B)",
+      "webhookId": "52742937-f545-4b81-ac9a-fc284a219fac",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "ok, anything else?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1552,
+        -352
+      ],
+      "id": "ba470198-033f-4ab1-b81a-bf2e327bac6d",
+      "name": "rerun node",
+      "webhookId": "a019243b-f6e3-46b4-8f5c-55b3d1e38e80",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "you want to Monitor a new channel or stop Monitoring previous one?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "📺 Monitor a new channel",
+            "disapproveLabel": "❌ Stop Monitoring"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1408,
+        -544
+      ],
+      "id": "c5bcb364-a58c-4ed4-adce-7f4fb980ef14",
+      "name": "ask monitor or stop monitor",
+      "webhookId": "a019243b-f6e3-46b4-8f5c-55b3d1e38e80",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f1e1cb25-1a99-4c14-9bc0-134f36bae5f5",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1264,
+        -416
+      ],
+      "id": "2c0ce397-edeb-4451-a98d-992cfaee1b07",
+      "name": "path selection1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error grok 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error grok 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "approve or disaprove of vid summery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "is this /start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if youtube link": {
+      "main": [
+        [
+          {
+            "node": "if youtube vid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "no youtube link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if youtube vid": {
+      "main": [
+        [
+          {
+            "node": "oEmbed for youtube vid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "fetch channel page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "oEmbed for youtube vid": {
+      "main": [
+        [
+          {
+            "node": "fetch channel page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch channel page": {
+      "main": [
+        [
+          {
+            "node": "extract channle ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract channle ID": {
+      "main": [
+        [
+          {
+            "node": "start monitoring this channle?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "start monitoring this channle?": {
+      "main": [
+        [
+          {
+            "node": "approve or disaprove of monitring the channle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "approve or disaprove of vid summery": {
+      "main": [
+        [
+          {
+            "node": "approve message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "disapprove",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "approve or disaprove of monitring the channle": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "not monitoring message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file": {
+      "main": [
+        [
+          {
+            "node": "confirm monitring message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Update file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is this /start": {
+      "main": [
+        [
+          {
+            "node": "start welcome message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "if youtube link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "clear channel config": {
+      "main": [
+        [
+          {
+            "node": "Convert to File (stop)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File (stop)": {
+      "main": [
+        [
+          {
+            "node": "Update file (stop)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file (stop)": {
+      "main": [
+        [
+          {
+            "node": "stop confirmation message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "start welcome message": {
+      "main": [
+        [
+          {
+            "node": "ask summarize or monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ask summarize or monitor": {
+      "main": [
+        [
+          {
+            "node": "path selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "path selection": {
+      "main": [
+        [
+          {
+            "node": "ask for link (path A)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ask monitor or stop monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ask for link (path A)": {
+      "main": [
+        [
+          {
+            "node": "prep summarize input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prep summarize input": {
+      "main": [
+        [
+          {
+            "node": "Groq call (Path A)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq call (Path A)": {
+      "main": [
+        [
+          {
+            "node": "send summary (path A)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "error grok path a",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ask for channel link (path B)": {
+      "main": [
+        [
+          {
+            "node": "validate youtube link (path B)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validate youtube link (path B)": {
+      "main": [
+        [
+          {
+            "node": "wrap as message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "invalid link message (path B)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wrap as message": {
+      "main": [
+        [
+          {
+            "node": "if youtube vid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "invalid link message (path B)": {
+      "main": [
+        [
+          {
+            "node": "ask for channel link (path B)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send summary (path A)": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "stop confirmation message": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rerun node": {
+      "main": [
+        [
+          {
+            "node": "ask summarize or monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "error grok path a": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "confirm monitring message": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "not monitoring message": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "no youtube link": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "disapprove": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "approve message": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "error grok 2": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "error grok 1": {
+      "main": [
+        [
+          {
+            "node": "rerun node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ask monitor or stop monitor": {
+      "main": [
+        [
+          {
+            "node": "path selection1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "path selection1": {
+      "main": [
+        [
+          {
+            "node": "ask for channel link (path B)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "clear channel config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "12421216-512b-4992-9b5b-08a271db55ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "71da200b2c9c98b22014a8a6beaaf7a3adedb8fb3784e7481b72879936ceffad"
+  },
+  "nodeGroups": [],
+  "id": "meX6gJx7Q4fGTdao",
+  "tags": []
+}
