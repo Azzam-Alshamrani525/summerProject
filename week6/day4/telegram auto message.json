@@ -1,0 +1,423 @@
+{
+  "name": "telegram auto message",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        48
+      ],
+      "id": "1efe8eae-f524-427b-bd0a-7c0cee5f0106",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCYskjD6IuQJrxrW3I0EriZA",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        48
+      ],
+      "id": "975fa03b-8138-40e0-87a4-416c63940114",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        320,
+        48
+      ],
+      "id": "2d269396-0116-4229-ac4d-2baf18e20ed0",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a509cc-a1dc-4bac-8bc3-95db454e8df7",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "36ae7c29-ca3a-48e6-a264-674013462a5a",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        48
+      ],
+      "id": "9f761f47-99ec-4f55-bcca-374b482677cb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on this YouTube video title, write a short intro sentence, then exactly 3 bullet points guessing what the video covers. Title: {{ $json.title }}\"\n    }\n  ],\n  \"max_tokens\": 1500\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        48
+      ],
+      "id": "a3c63c63-0a05-4edc-89f2-cbe504259e62",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uUJshABxRNnLlG6g",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "={{ $('Edit Fields').item.json.title }}\n\n{{ $('HTTP Request1').item.json.choices[0].message.content }}\n\n🔗 {{ $('Edit Fields').item.json.link }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        -64
+      ],
+      "id": "546642b7-28ef-416d-a1f0-0cc7b62d54f5",
+      "name": "Send a text message",
+      "webhookId": "1319e6a4-1327-4bba-a6ad-9c49cb2e7765",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"openai/gpt-oss-20b\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Reformat this into a short Telegram message. Keep the 3 bullet points as-is, add 1 relevant emoji, no markdown headers: {{ JSON.stringify($json.choices[0].message.content).slice(1, -1) }}\"\n    }\n  ],\n  \"max_tokens\": 800\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        48
+      ],
+      "id": "0483b3c8-6bad-4316-a0a2-1b3054f7b3cd",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "uUJshABxRNnLlG6g",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=⚠️ Workflow failed: {{ $workflow.name }}\nNode: HTTP Request (Groq #1)\nError: HTTP {{ $json.error.status }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        240
+      ],
+      "id": "2a34b171-b32e-4fc7-b93e-465dc055c870",
+      "name": "Send a text message1",
+      "webhookId": "ec2cdeb2-7179-4347-ac53-ac79537d64d7",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=⚠️ Workflow failed: {{ $workflow.name }}\nNode: HTTP Request1 (Groq #2)\nError: HTTP {{ $json.error.status }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        256
+      ],
+      "id": "67453bc8-ddb2-49a8-a8a4-5bb138eb25f8",
+      "name": "Send a text message2",
+      "webhookId": "4861587d-d800-4116-aaf0-8795bd95b441",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "1087117148",
+        "message": "=📺 أسئلة نص الليل uploaded a new video: \"{{ $('Edit Fields').item.json.title }}\"\n\nWant to receive it?",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "✅ Yes, send it",
+            "disapproveLabel": "❌ No, skip"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1168,
+        -48
+      ],
+      "id": "d57138a9-11ba-4af2-972e-0a7f03949ae0",
+      "name": "Send message and wait for response",
+      "webhookId": "ca72f8c9-e2d5-449e-bf66-e6325415015d",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "223c9793-51aa-4370-8b70-d34a1e31f970",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1376,
+        -48
+      ],
+      "id": "1da29b8a-534a-4c56-b0f0-9db281853ebe",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "1087117148",
+        "text": "=Skipped — you disapproved this one.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        80
+      ],
+      "id": "debffacd-ca9b-45bf-a374-7e669224993a",
+      "name": "Send a text message3",
+      "webhookId": "4861587d-d800-4116-aaf0-8795bd95b441",
+      "credentials": {
+        "telegramApi": {
+          "id": "uVfstoagUi8XsTnG",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "laoUBqyjHrZC8UhQ",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "a56fb490-ef51-4b97-bd5f-8063bb11a50a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "71da200b2c9c98b22014a8a6beaaf7a3adedb8fb3784e7481b72879936ceffad"
+  },
+  "nodeGroups": [],
+  "id": "bti2hBhhNn4OLgYh",
+  "tags": []
+}
